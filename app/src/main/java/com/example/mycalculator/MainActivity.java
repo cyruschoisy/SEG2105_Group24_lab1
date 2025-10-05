@@ -8,7 +8,8 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import java.math.BigDecimal;
-
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -127,9 +128,75 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private String evaluate(String expression) throws Exception {
-        String result = evaluate(expression);
+        if (expression == null || expression.isEmpty()) {
+            return "0";
+        }
+
+        // Step 1: Separate numbers and operators
+        List<String> tokens = new ArrayList<>();
+        StringBuilder number = new StringBuilder();
+
+        for (int i = 0; i < expression.length(); i++) {
+            char c = expression.charAt(i);
+
+            if (Character.isDigit(c) || c == '.') {
+                number.append(c); // build the number
+            } else if (c == '+' || c == '-' || c == 'x' || c == '/') {
+                if (number.length() > 0) {
+                    tokens.add(number.toString());
+                    number.setLength(0);
+                }
+                tokens.add(String.valueOf(c)); // add the operator
+            }
+        }
+
+        // add last number
+        if (number.length() > 0) {
+            tokens.add(number.toString());
+        }
+
+        // Step 2: Convert numeric tokens to doubles
+        List<Double> numbers = new ArrayList<>();
+        List<Character> operators = new ArrayList<>();
+
+        for (String token : tokens) {
+            if (token.equals("+") || token.equals("-") || token.equals("x") || token.equals("/")) {
+                operators.add(token.charAt(0));
+            } else {
+                numbers.add(Double.parseDouble(token));
+            }
+        }
+
+        // Step 3: Perform the calculation (respecting x and / before + and -)
+        // Handle multiplication and division first
+        for (int i = 0; i < operators.size(); i++) {
+            char op = operators.get(i);
+            if (op == 'x' || op == '/') {
+                double a = numbers.get(i);
+                double b = numbers.get(i + 1);
+                double res = (op == 'x') ? a * b : a / b;
+
+                // replace results in lists
+                numbers.set(i, res);
+                numbers.remove(i + 1);
+                operators.remove(i);
+                i--; // step back after removal
+            }
+        }
+
+        // Handle addition and subtraction
+        double result = numbers.get(0);
+        for (int i = 0; i < operators.size(); i++) {
+            char op = operators.get(i);
+            double next = numbers.get(i + 1);
+            if (op == '+') result += next;
+            else if (op == '-') result -= next;
+        }
+
+        // Step 4: Return formatted result
         BigDecimal decimal = new BigDecimal(result);
-        return decimal.setScale(2, BigDecimal.ROUND_HALF_UP).toPlainString();
+
+        return decimal.stripTrailingZeros().toPlainString();
     }
 
     private void addNumber(String number) {

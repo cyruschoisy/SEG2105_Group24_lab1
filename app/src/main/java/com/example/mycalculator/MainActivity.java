@@ -70,6 +70,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
+            case R.id.btn0:
+                addNumber("0");
+                break;
             case R.id.btn1:
                 addNumber("1");
                 break;
@@ -132,8 +135,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return "0";
         }
 
-        // Step 1: Separate numbers and operators
-        List<String> tokens = new ArrayList<>();
+        List<String> item = new ArrayList<>();
         StringBuilder number = new StringBuilder();
 
         for (int i = 0; i < expression.length(); i++) {
@@ -143,23 +145,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 number.append(c); // build the number
             } else if (c == '+' || c == '-' || c == 'x' || c == '/') {
                 if (number.length() > 0) {
-                    tokens.add(number.toString());
+                    item.add(number.toString());
                     number.setLength(0);
                 }
-                tokens.add(String.valueOf(c)); // add the operator
+                item.add(String.valueOf(c)); // add the operator
             }
         }
 
         // add last number
         if (number.length() > 0) {
-            tokens.add(number.toString());
+            item.add(number.toString());
         }
 
-        // Step 2: Convert numeric tokens to doubles
         List<Double> numbers = new ArrayList<>();
         List<Character> operators = new ArrayList<>();
 
-        for (String token : tokens) {
+        for (String token:item) {
             if (token.equals("+") || token.equals("-") || token.equals("x") || token.equals("/")) {
                 operators.add(token.charAt(0));
             } else {
@@ -167,8 +168,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
-        // Step 3: Perform the calculation (respecting x and / before + and -)
-        // Handle multiplication and division first
         for (int i = 0; i < operators.size(); i++) {
             char op = operators.get(i);
             if (op == 'x' || op == '/') {
@@ -184,16 +183,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
-        // Handle addition and subtraction
         double result = numbers.get(0);
         for (int i = 0; i < operators.size(); i++) {
             char op = operators.get(i);
             double next = numbers.get(i + 1);
-            if (op == '+') result += next;
-            else if (op == '-') result -= next;
+            if (op == '+') {
+                result += next;
+            }
+            else if (op == '-') {
+                result -= next;
+            }
         }
 
-        // Step 4: Return formatted result
         BigDecimal decimal = new BigDecimal(result);
 
         return decimal.stripTrailingZeros().toPlainString();
